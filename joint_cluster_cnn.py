@@ -14,6 +14,7 @@ import logging
 import os.path
 #from pathlib import Path
 import glob
+import pandas as pd
 
 batsnet_path="/media/rabi/Data/ThesisData/audio data analysis/audio-clustering/plots_15march_b/spectrograms_normalized/batsnet_train/1"
 class joint_cluster_cnn():
@@ -97,9 +98,11 @@ class joint_cluster_cnn():
             self.images = np.zeros((20*72, self.image_size1 * self.image_size2), np.uint8)
             self.gnd = np.zeros(20*72, np.uint8)
             path = './dataset/coil-20-proc/obj'
+            self.filenames_for_results=[]
             for i in range(20):
                 for j in range(72):
                     img_name = path + str(i+1) + '__' + str(j) + '.png'
+                    self.filenames_for_results=self.filenames_for_results+[img_name]
                     img = Image.open(img_name)
                     img.load()
                     img_data = np.asarray(img, dtype=np.uint8)
@@ -122,11 +125,12 @@ class joint_cluster_cnn():
                     img_data = np.asarray(img, dtype=np.uint8)
                     self.images[i*72+j, :] = np.reshape(img_data, (1, self.image_size1 * self.image_size2 * self.channel))
                     self.gnd[i*72+j] = i
+                    
             self.K = 100
             self.logger.info('%.2f s, Finished extracting COIL100 dataset', timeit.default_timer() - self.tic)
         elif 'batsnet' in dataset:
-            self.image_size1 = 500
-            self.image_size2 = 500
+            self.image_size1 = 128
+            self.image_size2 = 128
             self.channel = 3
             files_in_path=glob.glob(batsnet_path+'/*.png')
             total_files=len(files_in_path)
@@ -134,10 +138,13 @@ class joint_cluster_cnn():
             self.gnd = np.zeros(total_files, np.uint8)
             path = batsnet_path
             file_count=0
-            for file_path in files_in_path:
+            self.filenames_for_results=[]
+            for file_path in list(files_in_path):
+                self.filenames_for_results=self.filenames_for_results+[file_path]
                 img = Image.open(file_path)
-                img.load()
-                img_data = np.asarray(img, dtype=np.uint8)
+                #img.load()
+                img_data = np.asarray(img.convert('RGB').resize((self.image_size1,self.image_size2)), dtype=np.uint8)       #REMOVING THE FOURTH CHANNEL
+                img.close()
                 self.images[file_count, :] = np.reshape(img_data, (1, self.image_size1 * self.image_size2 * self.channel))
                 #self.gnd[i*72+j] = i      Leaving the groudn truth to ZEROS
                 file_count=file_count+1
@@ -195,6 +202,19 @@ class joint_cluster_cnn():
                                 normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 12 * 12
             net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 6 * 6
         elif 'coil' in self.dataset: # 128 * 128
+            net = convolution2d(data, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
+                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 124 * 124
+            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 62 * 62
+            net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
+                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 58 * 58
+            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 29 * 29
+            net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
+                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 25 * 25
+            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 13 * 13
+            net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
+                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 9 * 9
+            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 5 * 5
+        elif 'batsnet' in self.dataset: # 500 * 500
             net = convolution2d(data, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
                                 normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 124 * 124
             net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 62 * 62
@@ -627,4 +647,7 @@ class joint_cluster_cnn():
             C, fea = self.recurrent_process(fea, updateCNN = False)
             labels = self.get_labels(C)
             self.evaluation(labels)
-
+        #FINALLY SAVING THE RESUTLS
+        # We have 'self.filenames_for_results' and their corresponding 'labels'   
+        final_result={"Image Name":self.filenames_for_results, "Prediction":labels}
+        (pd.DataFrame(final_result).to_csv("results_jule.csv", header=True, mode='w'))
