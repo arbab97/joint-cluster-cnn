@@ -12,7 +12,10 @@ import math
 import timeit
 import logging
 import os.path
+#from pathlib import Path
+import glob
 
+batsnet_path="/media/rabi/Data/ThesisData/audio data analysis/audio-clustering/plots_15march_b/spectrograms_normalized/batsnet_train/1"
 class joint_cluster_cnn():
 
     Ks = 20  # the number of nearest neighbours of a sample
@@ -20,7 +23,7 @@ class joint_cluster_cnn():
     a = 1.0
     l = 1.0  # lambda
     alpha = 0  # -0.2
-    epochs = 20  # 20
+    epochs = 1  # 20
     batch_size = 100
     gamma_tr = 2  # weight of positive pairs in weighted triplet loss.
     margin = 0.2  # margin for weighted triplet loss
@@ -121,6 +124,26 @@ class joint_cluster_cnn():
                     self.gnd[i*72+j] = i
             self.K = 100
             self.logger.info('%.2f s, Finished extracting COIL100 dataset', timeit.default_timer() - self.tic)
+        elif 'batsnet' in dataset:
+            self.image_size1 = 500
+            self.image_size2 = 500
+            self.channel = 3
+            files_in_path=glob.glob(batsnet_path+'/*.png')
+            total_files=len(files_in_path)
+            self.images = np.zeros((total_files, self.image_size1 * self.image_size2 * self.channel), np.uint8)
+            self.gnd = np.zeros(total_files, np.uint8)
+            path = batsnet_path
+            file_count=0
+            for file_path in files_in_path:
+                img = Image.open(file_path)
+                img.load()
+                img_data = np.asarray(img, dtype=np.uint8)
+                self.images[file_count, :] = np.reshape(img_data, (1, self.image_size1 * self.image_size2 * self.channel))
+                #self.gnd[i*72+j] = i      Leaving the groudn truth to ZEROS
+                file_count=file_count+1
+            self.K = 5
+            self.logger.info('%.2f s, Finished extracting batsnet dataset', timeit.default_timer() - self.tic)
+
         elif 'umist' in dataset:
             self.image_size1 = 112
             self.image_size2 = 92
@@ -144,7 +167,6 @@ class joint_cluster_cnn():
                     n += 1
             self.K = 20
             self.logger.info('%.2f s, Finished extracting UMist dataset', timeit.default_timer() - self.tic)
-
         self.Ns = np.size(self.images, 0)
         self.num_batch = int(np.ceil(1.0 * self.Ns / self.batch_size))
 
@@ -196,9 +218,9 @@ class joint_cluster_cnn():
                                 normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 28 * 23
             net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 14 * 12
 
-        print net.get_shape()
+        print (net.get_shape())
         net = flatten(net)
-        print net.get_shape()
+        print (net.get_shape())
         net = fully_connected(net, num_outputs=160)
         net = tf.nn.l2_normalize(net, 1)
 

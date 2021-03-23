@@ -1,0 +1,4 @@
+
+conda create --name jule_tensorflow_3 python =2.7
+conda activate jule_tensorflow_3
+conda install  -c anaconda scikit-learn pillow tensorflow scipy numpy
