@@ -16,7 +16,7 @@ import os.path
 import glob
 import pandas as pd
 
-batsnet_path="/media/rabi/Data/ThesisData/audio data analysis/audio-clustering/plots_15march_b/spectrograms_normalized/batsnet_train/1"
+batsnet_path="/content/spectrograms_normalized/batsnet_train/1"
 class joint_cluster_cnn():
 
     Ks = 20  # the number of nearest neighbours of a sample
@@ -25,7 +25,7 @@ class joint_cluster_cnn():
     l = 1.0  # lambda
     alpha = 0  # -0.2
     epochs = 1  # 20
-    batch_size = 100
+    batch_size = 5
     gamma_tr = 2  # weight of positive pairs in weighted triplet loss.
     margin = 0.2  # margin for weighted triplet loss
     num_nsampling = 20  # number of negative samples for each positive pairs to construct triplet.
