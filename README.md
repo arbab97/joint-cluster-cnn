@@ -1,6 +1,6 @@
-# joint-cluster-cnn
+# joint-cluster-cnn for Bat Calls Classification
 
-An unofficial implementation of [JULE](https://arxiv.org/pdf/1604.03628) (Joint Unsupervised Learning of Deep Representations and Image Clusters) in TensorFlow.
+[JULE](https://arxiv.org/pdf/1604.03628) (Joint Unsupervised Learning of Deep Representations and Image Clusters) in TensorFlow.
 
 # File Structure
 Main class:
@@ -9,7 +9,7 @@ Main class:
 Test file:
 	test.py
 
-# Results
+# Results on Standardized datasets
 |Dataset | MNIST-test | USPS | COIL-20 | COIL-100 | UMist | 
 |---|---|---|---|---|---|
 |JC-NL | 0.849 | 0.883 | 0.904 | - | 0.750 |
