@@ -16,16 +16,16 @@ import os.path
 import glob
 import pandas as pd
 
-batsnet_path="/content/spectrograms_normalized/batsnet_train/1"
+batsnet_path="/content/spectrograms_normalized_croped_128/batsnet_train/1"
 class joint_cluster_cnn():
 
-    Ks = 20  # the number of nearest neighbours of a sample
-    Kc = 5  # the number of nearest clusters of a cluster
+    Ks = 20#20  # the number of nearest neighbours of a sample
+    Kc = 3#5  # the number of nearest clusters of a cluster
     a = 1.0
     l = 1.0  # lambda
     alpha = 0  # -0.2
     epochs = 1  # 20
-    batch_size = 5
+    batch_size = 50
     gamma_tr = 2  # weight of positive pairs in weighted triplet loss.
     margin = 0.2  # margin for weighted triplet loss
     num_nsampling = 20  # number of negative samples for each positive pairs to construct triplet.
@@ -129,9 +129,9 @@ class joint_cluster_cnn():
             self.K = 100
             self.logger.info('%.2f s, Finished extracting COIL100 dataset', timeit.default_timer() - self.tic)
         elif 'batsnet' in dataset:
-            self.image_size1 = 128
-            self.image_size2 = 128
-            self.channel = 3
+            self.image_size1 = 28
+            self.image_size2 = 28
+            self.channel = 1
             files_in_path=glob.glob(batsnet_path+'/*.png')
             total_files=len(files_in_path)
             self.images = np.zeros((total_files, self.image_size1 * self.image_size2 * self.channel), np.uint8)
@@ -143,7 +143,8 @@ class joint_cluster_cnn():
                 self.filenames_for_results=self.filenames_for_results+[file_path]
                 img = Image.open(file_path)
                 #img.load()
-                img_data = np.asarray(img.convert('RGB').resize((self.image_size1,self.image_size2)), dtype=np.uint8)       #REMOVING THE FOURTH CHANNEL
+                # img_data = np.asarray(img.convert('RGB').resize((self.image_size1,self.image_size2)), dtype=np.uint8)       #REMOVING THE FOURTH CHANNEL
+                img_data = np.asarray(img.convert('L').resize((self.image_size1,self.image_size2)), dtype=np.uint8)       #REMOVING THE FOURTH CHANNEL
                 img.close()
                 self.images[file_count, :] = np.reshape(img_data, (1, self.image_size1 * self.image_size2 * self.channel))
                 #self.gnd[i*72+j] = i      Leaving the groudn truth to ZEROS
@@ -215,18 +216,26 @@ class joint_cluster_cnn():
                                 normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 9 * 9
             net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 5 * 5
         elif 'batsnet' in self.dataset: # 500 * 500
+            # net = convolution2d(data, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
+            #                     normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 124 * 124
+            # net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 62 * 62
+            # net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
+            #                     normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 58 * 58
+            # net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 29 * 29
+            # net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
+            #                     normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 25 * 25
+            # net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 13 * 13
+            # net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
+            #                     normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 9 * 9
+            # net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 5 * 5
+
+            #using network from mnist
             net = convolution2d(data, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
-                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 124 * 124
-            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 62 * 62
+                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 24 * 24
+            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 12 * 12
             net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
-                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 58 * 58
-            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 29 * 29
-            net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
-                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 25 * 25
-            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 13 * 13
-            net = convolution2d(net, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='VALID',
-                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 9 * 9
-            net = max_pool2d(net, [2,2], [2,2], padding='SAME')  # 5 * 5
+                                normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 8 * 8
+
         elif 'umist' in self.dataset: # 112 * 92
             net = convolution2d(data, num_outputs=50, kernel_size=(5, 5), stride=(1, 1), padding='SAME',
                                 normalizer_fn=batch_norm, activation_fn=tf.nn.relu)  # 112 * 92
@@ -279,7 +288,10 @@ class joint_cluster_cnn():
         neigh = NearestNeighbors(n_neighbors=k, n_jobs=-1).fit(fea)
         self.logger.info('%.2f s, Finished fitting, begin to calculate Dis', timeit.default_timer() - self.tic)
         sortedDis, indexDis = neigh.kneighbors()
+        
         self.logger.info('%.2f s, Finished the calculation of Dis', timeit.default_timer() - self.tic)
+        #trying faiss
+        # index = faiss.index_factory(fea, "Flat")
 
         return sortedDis, indexDis
 
