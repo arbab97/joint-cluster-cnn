@@ -17,3 +17,5 @@ After adjusting the hyper-parameters, environment, and input directory path, run
 ```
 !export CUDA_VISIBLE_DEVICES=0 && source activate {environment name} && python test.py
 ```
+
+Please run it on the high-RAM instance of Colab, or on a system with atleast 24GB system memory.
