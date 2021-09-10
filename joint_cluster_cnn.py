@@ -16,16 +16,15 @@ import os.path
 import glob
 import pandas as pd
 
-batsnet_path="/content/spectrograms_normalized_croped_128/batsnet_train/1"
+batsnet_path="/content/spectrograms_vmin_vmax_highpass_balance_top5_2_cropped/batsnet_train/1"
 class joint_cluster_cnn():
 
-    Ks = 20#20  # the number of nearest neighbours of a sample
     Kc = 3#5  # the number of nearest clusters of a cluster
-    a = 1.0
-    l = 1.0  # lambda
-    alpha = 0  # -0.2
-    epochs = 1  # 20
     batch_size = 50
+    Ks = 20#20  # the number of nearest neighbours of a sample
+    l = 1.0  # lambda
+    a = 1.0
+    alpha = 0  # -0.2 
     gamma_tr = 2  # weight of positive pairs in weighted triplet loss.
     margin = 0.2  # margin for weighted triplet loss
     num_nsampling = 20  # number of negative samples for each positive pairs to construct triplet.
@@ -33,6 +32,7 @@ class joint_cluster_cnn():
     power_lr = 0.75  # power for inverse learning rate policy
     p = 0
     iter_cnn = 0
+    epochs = 100 
 
     def __init__(self, dataset, RC=True, updateCNN=True, eta=0.9):
         self.sess = tf.InteractiveSession()
