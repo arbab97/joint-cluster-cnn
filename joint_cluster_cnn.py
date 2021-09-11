@@ -16,12 +16,12 @@ import os.path
 import glob
 import pandas as pd
 
-batsnet_path="/content/spectrograms_vmin_vmax_highpass_balance_top5_2_cropped/batsnet_train/1"
+batsnet_path="/content/our_data/batsnet_train/1"
 class joint_cluster_cnn():
 
-    Kc = 3#5  # the number of nearest clusters of a cluster
+    Kc = 3  # the number of nearest clusters of a cluster
     batch_size = 50
-    Ks = 20#20  # the number of nearest neighbours of a sample
+    Ks = 20  # the number of nearest neighbours of a sample
     l = 1.0  # lambda
     a = 1.0
     alpha = 0  # -0.2 
