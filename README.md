@@ -18,7 +18,7 @@ A notebook has already been setup which will fetch the required data, install al
 Use `mkdir /content/joint-cluster-cnn/logfile` and then 
 `touch /content/joint-cluster-cnn/logfile/logfile.log`
 * Finally, run the model using the command given above. In notebook it is:  `export CUDA_VISIBLE_DEVICES=0 && source activate jule_tensorlfow_3 && python test.py`
-* The output is provided in `csv` format in the file: `results_iic.csv`
+* The output is provided in `csv` format in the file: `results_jule.csv`
 
 
 ### Citation
